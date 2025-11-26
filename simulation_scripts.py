@@ -87,6 +87,10 @@ def calculate_variance(values, probabilities):
     return np.sum(probabilities * values**2) - np.sum(probabilities * values) ** 2
 
 
+def calculate_autocorr(values, probabilities):
+    return 2 * np.sum(probabilities * values**2)
+
+
 def requantization_sim(
     input_stddev_array,
     equalization_coeffs,
@@ -108,6 +112,7 @@ def requantization_sim(
         4, 3, enforce_symmetry=True
     )
     final_variances = np.zeros_like(equalization_coeffs)
+    final_autocorrs = np.zeros_like(equalization_coeffs)
     for equalization_ind, equalization_coeff in enumerate(equalization_coeffs):
         if equalization_ind % 10 == 0:
             print(
@@ -134,12 +139,14 @@ def requantization_sim(
                 ]
             )
 
-        variance = calculate_variance(
+        final_variances[equalization_ind] = calculate_variance(
             final_quantized_value_options, final_quantized_probabilities
         )
-        final_variances[equalization_ind] = variance
+        final_autocorrs[equalization_ind] = calculate_autocorr(
+            final_quantized_value_options, final_quantized_probabilities
+        )
 
-    return final_variances
+    return final_variances, final_autocorrs
 
 
 def get_requantized_probabilities(
