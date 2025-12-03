@@ -94,10 +94,25 @@ def calculate_autocorr(values, probabilities):
 def requantization_sim(
     input_stddev_array,
     equalization_coeffs,
+    input_bits_total=18,
+    input_bits_fractional=17,
+    eq_coeff_bits_total=14,
+    eq_coeff_bits_fractional=2,
+    output_bits_total=4,
+    output_bits_fractional=3,
+    dither_stddev=0,
 ):
 
-    initial_quantized_value_options = get_quantized_value_options(18, 17)
-    # input_stddev_array = np.full_like(equalization_coeffs, input_stddev)
+    # equalization_coeffs = quantize(
+    #    equalization_coeffs,
+    #    eq_coeff_bits_total,
+    #    eq_coeff_bits_fractional,
+    #    signed=False,
+    # )
+
+    initial_quantized_value_options = get_quantized_value_options(
+        input_bits_total, input_bits_fractional
+    )
 
     input_stddev_unique = np.unique(input_stddev_array)
     initial_quantized_probabilities_array = np.zeros(
@@ -109,7 +124,7 @@ def requantization_sim(
         )
 
     final_quantized_value_options = get_quantized_value_options(
-        4, 3, enforce_symmetry=True
+        output_bits_total, output_bits_fractional, enforce_symmetry=True
     )
     final_variances = np.zeros_like(equalization_coeffs)
     final_autocorrs = np.zeros_like(equalization_coeffs)
@@ -125,9 +140,46 @@ def requantization_sim(
             np.where(input_stddev_unique == input_stddev_array[equalization_ind])[0][0],
         ]
         equalized_value_options = initial_quantized_value_options * equalization_coeff
+
+        if dither_stddev != 0:  # Add dither
+            resolution = 2 ** (-1 * (input_bits_fractional + eq_coeff_bits_fractional))
+            dither_cutoff = 5  # Go out to 5 sigma in the dither stddev
+
+            # New point separations to be added to the value options
+            add_point_separations = np.unique(
+                np.concatenate(
+                    (
+                        np.arange(
+                            0,
+                            dither_cutoff * dither_stddev + resolution,
+                            resolution,
+                        ),
+                        -1
+                        * np.arange(
+                            0,
+                            dither_cutoff * dither_stddev + resolution,
+                            resolution,
+                        ),
+                    )
+                ).flatten()
+            )
+            gaussian = np.exp(-(add_point_separations**2) / (2 * dither_stddev**2))
+            gaussian /= np.sum(gaussian)
+
+            equalized_value_options = (
+                equalized_value_options[:, np.newaxis]
+                + add_point_separations[np.newaxis, :]
+            ).flatten()
+            initial_quantized_probabilities = (
+                initial_quantized_probabilities[:, np.newaxis] * gaussian[np.newaxis, :]
+            ).flatten()
+
         final_quantized_probabilities = np.zeros_like(final_quantized_value_options)
         equalized_value_options_quantized = quantize(
-            equalized_value_options, 4, 3, enforce_symmetry=True
+            equalized_value_options,
+            output_bits_total,
+            output_bits_fractional,
+            enforce_symmetry=True,
         )
         for ind in range(len(final_quantized_value_options)):
             final_quantized_probabilities[ind] = np.sum(
