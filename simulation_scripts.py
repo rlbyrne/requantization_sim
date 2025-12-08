@@ -103,13 +103,6 @@ def requantization_sim(
     dither_stddev=0,
 ):
 
-    # equalization_coeffs = quantize(
-    #    equalization_coeffs,
-    #    eq_coeff_bits_total,
-    #    eq_coeff_bits_fractional,
-    #    signed=False,
-    # )
-
     initial_quantized_value_options = get_quantized_value_options(
         input_bits_total, input_bits_fractional
     )
