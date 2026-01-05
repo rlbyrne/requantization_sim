@@ -24,11 +24,19 @@ def ovro_lwa_sim():
         final_variances, final_autocorrs = simulation_scripts.requantization_sim(
             data_stddev,
             use_eq_coeffs,
+            input_bits_total=18,
+            input_bits_fractional=0,
+            eq_coeff_bits_total=14,
+            eq_coeff_bits_fractional=0,
+            output_bits_total=4,
+            output_bits_fractional=0,
+            requantization_gain=requantization_gain,
         )  # Run simulation
 
         f = open(f"simulation_output{ind}.npy", "wb")
         np.save(f, freq_array)
         np.save(f, final_variances)
+        np.save(f, final_autocorrs)
         f.close()
 
 
