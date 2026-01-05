@@ -100,6 +100,7 @@ def requantization_sim(
     eq_coeff_bits_fractional=2,
     output_bits_total=4,
     output_bits_fractional=3,
+    requantization_gain=1,
     dither_stddev=0,
 ):
 
@@ -169,7 +170,7 @@ def requantization_sim(
 
         final_quantized_probabilities = np.zeros_like(final_quantized_value_options)
         equalized_value_options_quantized = quantize(
-            equalized_value_options,
+            equalized_value_options / requantization_gain,
             output_bits_total,
             output_bits_fractional,
             enforce_symmetry=True,
@@ -197,9 +198,16 @@ def requantization_sim(
 def get_requantized_probabilities(
     input_stddev_array,
     equalization_coeffs,
+    input_bits_total=18,
+    input_bits_fractional=17,
+    output_bits_total=4,
+    output_bits_fractional=3,
+    requantization_gain=1,
 ):
 
-    initial_quantized_value_options = get_quantized_value_options(18, 17)
+    initial_quantized_value_options = get_quantized_value_options(
+        input_bits_total, input_bits_fractional
+    )
 
     input_stddev_unique = np.unique(input_stddev_array)
     initial_quantized_probabilities_array = np.zeros(
@@ -211,7 +219,7 @@ def get_requantized_probabilities(
         )
 
     final_quantized_value_options = get_quantized_value_options(
-        4, 3, enforce_symmetry=True
+        output_bits_total, output_bits_fractional, enforce_symmetry=True
     )
     final_quantized_probabilities = np.zeros(
         (len(final_quantized_value_options), len(equalization_coeffs))
@@ -224,7 +232,10 @@ def get_requantized_probabilities(
         ]
         equalized_value_options = initial_quantized_value_options * equalization_coeff
         equalized_value_options_quantized = quantize(
-            equalized_value_options, 4, 3, enforce_symmetry=True
+            equalized_value_options / requantization_gain,
+            output_bits_total,
+            output_bits_fractional,
+            enforce_symmetry=True,
         )
         for ind in range(len(final_quantized_value_options)):
             final_quantized_probabilities[ind, equalization_ind] = np.sum(

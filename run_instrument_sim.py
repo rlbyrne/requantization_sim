@@ -12,22 +12,24 @@ def ovro_lwa_sim():
     channel_width_mhz = 23925.78125 * 1e-6
     freq_array = np.arange(len(eq_coeffs_mat["coef"][0, :])) * channel_width_mhz
 
-    use_eq_coeffs = eq_coeffs_mat["coef"][
-        0, :
-    ]  # Use the first set of equalization coefficients
+    for ind in range(7):
+        use_eq_coeffs = eq_coeffs_mat["coef"][
+            ind, :
+        ]  # Use the first set of equalization coefficients
 
-    target_value = 3 / 2**3
-    data_stddev = target_value / use_eq_coeffs
+        requantization_gain = 2**16
+        target_value = 3 * requantization_gain
+        data_stddev = target_value / use_eq_coeffs
 
-    final_variances, final_autocorrs = simulation_scripts.requantization_sim(
-        data_stddev,
-        use_eq_coeffs,
-    )  # Run simulation
+        final_variances, final_autocorrs = simulation_scripts.requantization_sim(
+            data_stddev,
+            use_eq_coeffs,
+        )  # Run simulation
 
-    f = open(f"simulation_output.npy", "wb")
-    np.save(f, freq_array)
-    np.save(f, final_variances)
-    f.close()
+        f = open(f"simulation_output{ind}.npy", "wb")
+        np.save(f, freq_array)
+        np.save(f, final_variances)
+        f.close()
 
 
 def constant_slope_sims():
