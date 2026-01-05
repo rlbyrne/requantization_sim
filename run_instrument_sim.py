@@ -69,4 +69,4 @@ def constant_slope_sims():
 
 
 if __name__ == "__main__":
-    constant_slope_sims()
+    ovro_lwa_sim()
