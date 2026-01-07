@@ -43,7 +43,6 @@ def ovro_lwa_sim():
 
 def constant_slope_sims():
 
-    channel_width_mhz = 23925.78125 * 1e-6
     nfreqs = 2048
     average_signal_stddev = 16
     frac_variation = np.array([0.01, 0.1, 0.5, 1])
@@ -68,7 +67,6 @@ def constant_slope_sims():
             requantization_gain=requantization_gain,
         )  # Run simulation
         f = open(f"const_slope_simulation_output_slope{use_var}.npy", "wb")
-        np.save(f, freq_array)
         np.save(f, final_variances)
         np.save(f, final_autocorrs)
         f.close()
