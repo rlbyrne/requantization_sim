@@ -117,7 +117,7 @@ def increased_bit_depth_simulations():
     for output_bits in output_bits_array:
 
         requantization_gain = 2 ** (20 - output_bits)
-        target_value = 3 * requantization_gain
+        target_value = 3 * (2**16)  # Keep the target value the same for all
 
         min_signal_stddev = 2 * average_signal_stddev / (2 + use_var)
         max_signal_stddev = 2 * average_signal_stddev - min_signal_stddev
