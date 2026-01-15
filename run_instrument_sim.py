@@ -144,5 +144,39 @@ def increased_bit_depth_simulations():
         f.close()
 
 
+def dithering_sim():
+
+    nfreqs = 2048
+    average_signal_stddev = 16.0
+    use_var = 1.0
+    requantization_gain = 2**16
+    target_value = 3 * requantization_gain
+
+    min_signal_stddev = 2 * average_signal_stddev / (2 + use_var)
+    max_signal_stddev = 2 * average_signal_stddev - min_signal_stddev
+    data_stddev = np.linspace(min_signal_stddev, max_signal_stddev, num=nfreqs)
+    eq_coeffs = target_value / data_stddev
+
+    final_variances, final_autocorrs = simulation_scripts.requantization_sim(
+        data_stddev,
+        eq_coeffs,
+        input_bits_total=18,
+        input_bits_fractional=0,
+        eq_coeff_bits_total=14,
+        eq_coeff_bits_fractional=0,
+        output_bits_total=4,
+        output_bits_fractional=0,
+        requantization_gain=requantization_gain,
+        dither_stddev=requantization_gain / 10,
+    )  # Run simulation
+    f = open(
+        f"const_slope_simulation_output_dither.npy",
+        "wb",
+    )
+    np.save(f, final_variances)
+    np.save(f, final_autocorrs)
+    f.close()
+
+
 if __name__ == "__main__":
-    increased_bit_depth_simulations()
+    dithering_sim()
