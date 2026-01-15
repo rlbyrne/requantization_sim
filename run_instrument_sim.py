@@ -167,7 +167,7 @@ def dithering_sim():
         output_bits_total=4,
         output_bits_fractional=0,
         requantization_gain=requantization_gain,
-        dither_stddev=requantization_gain / 10,
+        dither_stddev=1200.0,
     )  # Run simulation
     f = open(
         f"const_slope_simulation_output_dither.npy",
