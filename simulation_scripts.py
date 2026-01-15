@@ -137,7 +137,7 @@ def requantization_sim(
 
         if dither_stddev != 0:  # Add dither
             resolution = 2 ** (-1 * (input_bits_fractional + eq_coeff_bits_fractional))
-            dither_cutoff = 5  # Go out to 5 sigma in the dither stddev
+            dither_cutoff = 3  # Go out to 5 sigma in the dither stddev
 
             # New point separations to be added to the value options
             add_point_separations = np.unique(
