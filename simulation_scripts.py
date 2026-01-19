@@ -55,7 +55,7 @@ def quantize(
     return numbers
 
 
-def get_probabilities(stddev, value_options):
+def get_probabilities(stddev, value_options, mean_val=0):
 
     probabilities = np.zeros_like(value_options)
     for ind in range(len(value_options)):
@@ -73,8 +73,8 @@ def get_probabilities(stddev, value_options):
             * stddev
             / 2
             * (
-                scipy.special.erf(integral_end / (np.sqrt(2) * stddev))
-                - scipy.special.erf(integral_start / (np.sqrt(2) * stddev))
+                scipy.special.erf((integral_end - mean_val) / (np.sqrt(2) * stddev))
+                - scipy.special.erf((integral_start - mean_val) / (np.sqrt(2) * stddev))
             )
         )
         probabilities[ind] = integral_value
@@ -102,6 +102,7 @@ def requantization_sim(
     output_bits_fractional=3,
     requantization_gain=1,
     dither_stddev=0,
+    integer_dither=False,
 ):
 
     initial_quantized_value_options = get_quantized_value_options(
@@ -135,9 +136,9 @@ def requantization_sim(
         ]
         equalized_value_options = initial_quantized_value_options * equalization_coeff
 
-        if dither_stddev != 0:  # Add dither
+        if dither_stddev != 0 and integer_dither:  # Add integer dither
             resolution = 2 ** (-1 * (input_bits_fractional + eq_coeff_bits_fractional))
-            dither_cutoff = 3  # Go out to 5 sigma in the dither stddev
+            dither_cutoff = 3  # Go out to 3 sigma in the dither stddev
 
             # New point separations to be added to the value options
             add_point_separations = np.unique(
@@ -145,13 +146,15 @@ def requantization_sim(
                     (
                         np.arange(
                             0,
-                            dither_cutoff * dither_stddev + resolution,
+                            dither_cutoff * dither_stddev * requantization_gain
+                            + resolution,
                             resolution,
                         ),
                         -1
                         * np.arange(
                             0,
-                            dither_cutoff * dither_stddev + resolution,
+                            dither_cutoff * dither_stddev * requantization_gain
+                            + resolution,
                             resolution,
                         ),
                     )
@@ -169,21 +172,38 @@ def requantization_sim(
             ).flatten()
 
         final_quantized_probabilities = np.zeros_like(final_quantized_value_options)
-        equalized_value_options_quantized = quantize(
-            equalized_value_options / requantization_gain,
-            output_bits_total,
-            output_bits_fractional,
-            enforce_symmetry=True,
-        )
-        for ind in range(len(final_quantized_value_options)):
-            final_quantized_probabilities[ind] = np.sum(
-                initial_quantized_probabilities[
-                    np.where(
-                        equalized_value_options_quantized
-                        == final_quantized_value_options[ind]
-                    )
-                ]
+
+        if dither_stddev == 0 or integer_dither:
+            equalized_value_options_quantized = quantize(
+                equalized_value_options / requantization_gain,
+                output_bits_total,
+                output_bits_fractional,
+                enforce_symmetry=True,
             )
+            for ind in range(len(final_quantized_value_options)):
+                final_quantized_probabilities[ind] = np.sum(
+                    initial_quantized_probabilities[
+                        np.where(
+                            equalized_value_options_quantized
+                            == final_quantized_value_options[ind]
+                        )
+                    ]
+                )
+
+        else:  # Add floating point dither
+            for eq_val_ind in range(len(equalized_value_options)):
+                requantized_val = (
+                    equalized_value_options[equalized_value_ind] / requantization_gain
+                )
+                new_probabilities = get_probabilities(
+                    dither_stddev,
+                    final_quantized_value_options,
+                    mean_val=requantized_val,
+                )
+                final_quantized_probabilities += (
+                    initial_quantized_probabilities[equalized_value_ind]
+                    * new_probabilities
+                )
 
         final_variances[equalization_ind] = calculate_variance(
             final_quantized_value_options, final_quantized_probabilities
