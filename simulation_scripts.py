@@ -124,11 +124,10 @@ def requantization_sim(
     final_variances = np.zeros_like(equalization_coeffs)
     final_autocorrs = np.zeros_like(equalization_coeffs)
     for equalization_ind, equalization_coeff in enumerate(equalization_coeffs):
-        if equalization_ind % 10 == 0:
-            print(
-                f"Processing frequency {equalization_ind+1} of {len(equalization_coeffs)}.",
-                flush=True,
-            )
+        print(
+            f"Processing frequency {equalization_ind+1} of {len(equalization_coeffs)}.",
+            flush=True,
+        )
 
         initial_quantized_probabilities = initial_quantized_probabilities_array[
             :,
@@ -191,18 +190,15 @@ def requantization_sim(
                 )
 
         else:  # Add floating point dither
-            for eq_val_ind in range(len(equalized_value_options)):
-                requantized_val = (
-                    equalized_value_options[equalized_value_ind] / requantization_gain
-                )
+            for ind in range(len(equalized_value_options)):
+                requantized_val = equalized_value_options[ind] / requantization_gain
                 new_probabilities = get_probabilities(
                     dither_stddev,
                     final_quantized_value_options,
                     mean_val=requantized_val,
                 )
                 final_quantized_probabilities += (
-                    initial_quantized_probabilities[equalized_value_ind]
-                    * new_probabilities
+                    initial_quantized_probabilities[ind] * new_probabilities
                 )
 
         final_variances[equalization_ind] = calculate_variance(
