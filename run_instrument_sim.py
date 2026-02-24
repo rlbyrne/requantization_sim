@@ -45,19 +45,18 @@ def constant_slope_sims():
 
     nfreqs = 2048
     average_signal_stddev = 16
-    # frac_variation = np.array([0.01, 0.1, 0.5, 1])
-    frac_variation = np.array([5])
+    frac_variation = np.array([0.01, 0.1, 0.5, 1, 5])
     requantization_gain = 2**16
     target_value = 3 * requantization_gain
 
     for use_var in frac_variation:
-        min_signal_stddev = 2 * average_signal_stddev / (2 + use_var)
-        max_signal_stddev = 2 * average_signal_stddev - min_signal_stddev
-        data_stddev = np.linspace(min_signal_stddev, max_signal_stddev, num=nfreqs)
-        eq_coeffs = target_value / data_stddev
+        min_signal_var = 2 * (average_signal_stddev) ** 2 / (2 + use_var)
+        max_signal_var = 2 * (average_signal_stddev) ** 2 - min_signal_var
+        data_var = np.linspace(min_signal_var, max_signal_var, num=nfreqs)
+        eq_coeffs = target_value / np.sqrt(data_var)
 
         final_variances, final_autocorrs = simulation_scripts.requantization_sim(
-            data_stddev,
+            np.sqrt(data_var),
             eq_coeffs,
             input_bits_total=18,
             input_bits_fractional=0,
@@ -82,13 +81,13 @@ def increased_signal_simulations():
     target_value = 3 * requantization_gain
 
     for average_signal_stddev in average_signal_stddev_array:
-        min_signal_stddev = 2 * average_signal_stddev / (2 + use_var)
-        max_signal_stddev = 2 * average_signal_stddev - min_signal_stddev
-        data_stddev = np.linspace(min_signal_stddev, max_signal_stddev, num=nfreqs)
-        eq_coeffs = target_value / data_stddev
+        min_signal_var = 2 * average_signal_stddev**2 / (2 + use_var)
+        max_signal_var = 2 * average_signal_stddev**2 - min_signal_var
+        data_var = np.linspace(min_signal_var, max_signal_var, num=nfreqs)
+        eq_coeffs = target_value / np.sqrt(data_var)
 
         final_variances, final_autocorrs = simulation_scripts.requantization_sim(
-            data_stddev,
+            np.sqrt(data_var),
             eq_coeffs,
             input_bits_total=18,
             input_bits_fractional=0,
@@ -119,13 +118,13 @@ def increased_bit_depth_simulations():
         requantization_gain = 2 ** (20 - output_bits)
         target_value = 3 * (2**16)  # Keep the target value the same for all
 
-        min_signal_stddev = 2 * average_signal_stddev / (2 + use_var)
-        max_signal_stddev = 2 * average_signal_stddev - min_signal_stddev
-        data_stddev = np.linspace(min_signal_stddev, max_signal_stddev, num=nfreqs)
-        eq_coeffs = target_value / data_stddev
+        min_signal_var = 2 * average_signal_stddev**2 / (2 + use_var)
+        max_signal_var = 2 * average_signal_stddev**2 - min_signal_var
+        data_var = np.linspace(min_signal_var, max_signal_var, num=nfreqs)
+        eq_coeffs = target_value / np.sqrt(data_var)
 
         final_variances, final_autocorrs = simulation_scripts.requantization_sim(
-            data_stddev,
+            np.sqrt(data_var),
             eq_coeffs,
             input_bits_total=18,
             input_bits_fractional=0,
@@ -152,13 +151,13 @@ def dithering_sim():
     requantization_gain = 2**16
     target_value = 3 * requantization_gain
 
-    min_signal_stddev = 2 * average_signal_stddev / (2 + use_var)
-    max_signal_stddev = 2 * average_signal_stddev - min_signal_stddev
-    data_stddev = np.linspace(min_signal_stddev, max_signal_stddev, num=nfreqs)
-    eq_coeffs = target_value / data_stddev
+    min_signal_var = 2 * average_signal_stddev**2 / (2 + use_var)
+    max_signal_var = 2 * average_signal_stddev**2 - min_signal_var
+    data_var = np.linspace(min_signal_var, max_signal_var, num=nfreqs)
+    eq_coeffs = target_value / np.sqrt(data_var)
 
     final_variances, final_autocorrs = simulation_scripts.requantization_sim(
-        data_stddev,
+        np.sqrt(data_var),
         eq_coeffs,
         input_bits_total=18,
         input_bits_fractional=0,
@@ -186,13 +185,13 @@ def dithering_sim_floating_point():
     requantization_gain = 2**16
     target_value = 3 * requantization_gain
 
-    min_signal_stddev = 2 * average_signal_stddev / (2 + use_var)
-    max_signal_stddev = 2 * average_signal_stddev - min_signal_stddev
-    data_stddev = np.linspace(min_signal_stddev, max_signal_stddev, num=nfreqs)
-    eq_coeffs = target_value / data_stddev
+    min_signal_var = 2 * average_signal_stddev**2 / (2 + use_var)
+    max_signal_var = 2 * average_signal_stddev**2 - min_signal_var
+    data_var = np.linspace(min_signal_var, max_signal_var, num=nfreqs)
+    eq_coeffs = target_value / np.sqrt(data_var)
 
     final_variances, final_autocorrs = simulation_scripts.requantization_sim(
-        data_stddev,
+        np.sqrt(data_var),
         eq_coeffs,
         input_bits_total=18,
         input_bits_fractional=0,
@@ -214,4 +213,7 @@ def dithering_sim_floating_point():
 
 
 if __name__ == "__main__":
+    constant_slope_sims()
+    increased_signal_simulations()
+    increased_bit_depth_simulations()
     dithering_sim_floating_point()
