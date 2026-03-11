@@ -7,7 +7,7 @@ import simulation_scripts
 def ovro_lwa_sim():
     current_dir = os.getcwd()
     eq_coeffs_mat = scipy.io.loadmat(
-        f"{current_dir}/20250612-settingsAll-day_smoothed.mat"
+        f"{current_dir}/20251120a-settingsAll-day-FW7p5.mat"
     )
     channel_width_mhz = 23925.78125 * 1e-6
     freq_array = np.arange(len(eq_coeffs_mat["coef"][0, :])) * channel_width_mhz
@@ -15,30 +15,28 @@ def ovro_lwa_sim():
     requantization_gain = 2**16
     target_value = 3 * requantization_gain
 
-    for ind in range(7):
-        use_eq_coeffs = eq_coeffs_mat["coef"][
-            ind, :
-        ]  # Use the first set of equalization coefficients
+    ind = 6
+    use_eq_coeffs = eq_coeffs_mat["coef"][ind, :]
 
-        data_stddev = target_value / use_eq_coeffs
+    data_stddev = target_value / use_eq_coeffs
 
-        final_variances, final_autocorrs = simulation_scripts.requantization_sim(
-            data_stddev,
-            use_eq_coeffs,
-            input_bits_total=18,
-            input_bits_fractional=0,
-            eq_coeff_bits_total=14,
-            eq_coeff_bits_fractional=0,
-            output_bits_total=4,
-            output_bits_fractional=0,
-            requantization_gain=requantization_gain,
-        )  # Run simulation
+    final_variances, final_autocorrs = simulation_scripts.requantization_sim(
+        data_stddev,
+        use_eq_coeffs,
+        input_bits_total=18,
+        input_bits_fractional=0,
+        eq_coeff_bits_total=14,
+        eq_coeff_bits_fractional=0,
+        output_bits_total=4,
+        output_bits_fractional=0,
+        requantization_gain=requantization_gain,
+    )  # Run simulation
 
-        f = open(f"simulation_output{ind}.npy", "wb")
-        np.save(f, freq_array)
-        np.save(f, final_variances)
-        np.save(f, final_autocorrs)
-        f.close()
+    f = open(f"ovro-lwa_simulation_output.npy", "wb")
+    np.save(f, freq_array)
+    np.save(f, final_variances)
+    np.save(f, final_autocorrs)
+    f.close()
 
 
 def constant_slope_sims():
