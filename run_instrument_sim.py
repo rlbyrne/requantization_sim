@@ -211,7 +211,4 @@ def dithering_sim_floating_point():
 
 
 if __name__ == "__main__":
-    constant_slope_sims()
-    increased_signal_simulations()
-    increased_bit_depth_simulations()
-    dithering_sim_floating_point()
+    ovro_lwa_sim()
