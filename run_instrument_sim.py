@@ -7,7 +7,7 @@ import simulation_scripts
 def ovro_lwa_sim():
     current_dir = os.getcwd()
     eq_coeffs_mat = scipy.io.loadmat(
-        f"{current_dir}/20251120a-settingsAll-day-FW7p5.mat"
+        f"{current_dir}/20251120c-settingsAll-night-FW7p5.mat"
     )
     channel_width_mhz = 23925.78125 * 1e-6
     freq_array = np.arange(len(eq_coeffs_mat["coef"][0, :])) * channel_width_mhz
@@ -15,9 +15,16 @@ def ovro_lwa_sim():
     requantization_gain = 2**16
     target_value = 3 * requantization_gain
 
-    ind = 6
+    ind = 2
     use_eq_coeffs = eq_coeffs_mat["coef"][ind, :]
 
+    use_eq_coeffs = simulation_scripts.quantize(
+        use_eq_coeffs*4,
+        16,
+        0,
+        signed=False,
+        enforce_symmetry=False,
+    )
     data_stddev = target_value / use_eq_coeffs
 
     final_variances, final_autocorrs = simulation_scripts.requantization_sim(
@@ -32,7 +39,7 @@ def ovro_lwa_sim():
         requantization_gain=requantization_gain,
     )  # Run simulation
 
-    f = open(f"ovro-lwa_simulation_output.npy", "wb")
+    f = open(f"ovro-lwa_simulation_output_2.npy", "wb")
     np.save(f, freq_array)
     np.save(f, final_variances)
     np.save(f, final_autocorrs)
